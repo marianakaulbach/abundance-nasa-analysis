@@ -1,0 +1,609 @@
+---
+title: "abundance-nasa-supplimental-markdown"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## *Below are the steps to perform an analysis on correlation between Spotted Wing Drosophila (SWD) collection data and NASA weather data, considering the relationship bewteen SWD abundance and precipitation, relative humdity, and temperature.*
+
+**(1)** Open packages necessary for this analysis.
+
+```{r}
+library(readr)
+library(nasapower)
+library(tidyverse)
+library(cowplot)
+```
+
+**(2)** Open the sheet with SWD count data from local folder.
+
+```{r}
+SWD_data <- read_csv("C:/Users/maria/OneDrive/Desktop/abundance-nasa/NEW CLEAN EXCEL Nunez SWD Sorting Sheet June 2024 for abundance-nasa(Data).csv")
+```
+
+*Data sources used to compile into SWD_data for this analysis:*
+
+-   *KY data:* <https://doi.org/10.13023/ent.12>
+
+-   *VT and VA data:* <https://docs.google.com/spreadsheets/d/1VGw4-pGKujTjK-Cw0LBhcxz-A7PahalhZNSw6sqhj7I/edit?usp=sharing>
+
+**(3)** Download NASA data on relative humidity (H2M), temperature (T2M), and precipitation (PRECTOTCORR) for locations of interest by using farm coordinates.
+
+```{r}
+#Vermont Locations:
+
+#SWEET ROOTS FARM
+SweetRoots_weather <- get_power(
+  community = "ag",
+  lonlat = c(-73.2420434,44.2893745),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01",
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#ADAM'S BERRY FARM
+AdamsBerry_weather <- get_power(
+  community = "ag",
+  lonlat = c(-73.1885194,44.29804),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#FULL BELLY FARM
+FullBelly_weather <- get_power(
+  community = "ag",
+  lonlat = c(-73.1334011,44.265172),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#LAST RESORT FARM
+LastResort_weather <- get_power(
+  community = "ag",
+  lonlat = c(-73.1014259,44.2661258),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#COVERED BRIDGE FARM
+CoveredBridge_weather <- get_power(
+  community = "ag",
+  lonlat = c(-72.926916,44.5147926),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+
+#Kentucky Locations
+
+#SOUTH FARM
+SouthFarm_weather <- get_power(
+  community = "ag",
+  lonlat = c(-84.5348738,37.9736587),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2020-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#BEREA FARM
+BF_weather <- get_power(
+  community = "ag",
+  lonlat = c(-84.3019525,37.590313),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2020-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+
+#Virginia Locations
+
+#CARTER'S MOUNTAIN
+CartersMountain_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.5447915,37.9740223),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2017-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#CHILES PEACH ORCHARD
+ChilesPeachOrchard_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.7471497,38.0672129),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#LEVERING ORCHARD
+LeveringOrchard_weather <- get_power(
+  community = "ag",
+  lonlat = c(-80.6151617,36.6500994),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#CHARLOTTESVILLE ALBERMARLE ELEMENTARY SCHOOL
+CharlottesvilleAlbermarle_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.4638626,38.0624585),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#GREAT COUNTRY FARM
+GreatCountryFarms_weather <- get_power(
+  community = "ag",
+  lonlat = c(-77.8162521,39.1003535),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#CROSS KEYS FARM
+CrossKeysFarm_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.842056,38.3597327),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2022-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#AlBe - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+AlBe_weather <- get_power(
+  community = "ag",
+  lonlat = c(-79.081904,38.146223),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#KiBa - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+KiBa_weather <- get_power(
+  community = "ag",
+  lonlat = c(-79.017840,37.8929361),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#JoNu - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+JoNu_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.488982,38.0783378),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#FeAb - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+FeAb_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.48961,37.97985),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#RaPo - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+RaPo_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.3417122,37.9778276),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#WiHa - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+WiHa_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.631458,38.021608),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#NoSh - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+NoSh_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.631460,38.021608),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#LiBl - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+LiBl_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.4915567,38.0980496),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#GwMe - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+GwMe_weather <- get_power(
+  community = "ag",
+  lonlat = c(-77.49892,39.0444765),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#FrSa - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+FrSa_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.8319075,38.3967029),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#NaMo - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+NaMo_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.5021388,38.0653651),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#AlBr - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+AlBr_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.465637,38.036324),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#SiKi - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+SiKi_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.42491,38.291869),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#LiHa - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+LiHa_weather <- get_power(
+  community = "ag",
+  lonlat = c(-77.45722,37.5825066),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#DoSc - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+DoSc_weather <- get_power(
+  community = "ag",
+  lonlat = c(-78.473266,38.06808),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+#NaCa - BACKYARD EVOLUTION (citizen science project, backyard sampling)
+NaCa_weather <- get_power(
+  community = "ag",
+  lonlat = c(-79.5244928,36.608054),
+  pars = c("RH2M", "T2M", "PRECTOTCORR"),
+  dates = c("2021-01-01", 
+            paste(2025, "-08-20", sep = "")),
+  temporal_api = "daily"
+)
+```
+
+**(4)** Combine dataframes by state and total to be used for future analysis. - Stacked line and dot plots visualize temperature (T2M) and SWD population (N_swd) over time.
+
+```{r}
+#Combine dataframes from all locations in VT
+AllFarmsVT_weather <-rbind(AdamsBerry_weather, CoveredBridge_weather, FullBelly_weather, LastResort_weather, SweetRoots_weather)
+#Combine dataframes from all locations in KY
+AllFarmsKY_weather <-rbind(SouthFarm_weather, BF_weather)
+#Combine dataframes from all locations in VA
+AllFarmsVA_weather <-rbind(CrossKeysFarm_weather, CartersMountain_weather, GreatCountryFarms_weather, LeveringOrchard_weather, CharlottesvilleAlbermarle_weather,ChilesPeachOrchard_weather,AlBe_weather,KiBa_weather,JoNu_weather,FeAb_weather,RaPo_weather,WiHa_weather,NoSh_weather,LiBl_weather,GwMe_weather,FrSa_weather,NaMo_weather,AlBr_weather,SiKi_weather,LiHa_weather,DoSc_weather,NaCa_weather)
+#Combine dataframes for all locations 
+AllFarmsTotal_weather<-rbind.data.frame(AllFarmsKY_weather, AllFarmsVT_weather, AllFarmsVA_weather)
+```
+
+**(5)** Clean up datasets so that they are streamlined and functional for figure generation.
+
+```{r}
+#CombineLatLon data into one variable "Coordinates", because local SWD collection data is given "Coordinates" while NASA downloaded data is given "LAT" and "LON"
+AllFarmsVT_weather$Coordinates<- paste(AllFarmsVT_weather$LAT, AllFarmsVT_weather$LON,sep=",")
+AllFarmsKY_weather$Coordinates<- paste(AllFarmsKY_weather$LAT, AllFarmsKY_weather$LON,sep=",")
+AllFarmsVA_weather$Coordinates<- paste(AllFarmsVA_weather$LAT, AllFarmsVA_weather$LON,sep=",")
+AllFarmsTotal_weather$Coordinates<- paste(AllFarmsTotal_weather$LAT, AllFarmsTotal_weather$LON,sep=",")
+
+#Remove columns that we do not need for our analysis. DD,MM,and YYYY are removed because there is already a separate column for DD-MM-YYYY.
+
+AllFarmsVT_weather$DD<-NULL
+AllFarmsVT_weather$MM<-NULL
+AllFarmsVT_weather$YYYY<-NULL
+AllFarmsVT_weather$DOY<-NULL
+AllFarmsKY_weather$DD<-NULL
+AllFarmsKY_weather$MM<-NULL
+AllFarmsKY_weather$YYYY<-NULL
+AllFarmsKY_weather$DOY<-NULL
+AllFarmsVA_weather$DD<-NULL
+AllFarmsVA_weather$MM<-NULL
+AllFarmsVA_weather$YYYY<-NULL
+AllFarmsVA_weather$DOY<-NULL
+AllFarmsTotal_weather$DD<-NULL
+AllFarmsTotal_weather$MM<-NULL
+AllFarmsTotal_weather$YYYY<-NULL
+AllFarmsTotal_weather$DOY<-NULL
+
+#save YYYYMMDD as a date 
+AllFarmsTotal_weather$YYYYMMDD <- as.Date(AllFarmsTotal_weather$YYYYMMDD, format = "%Y-%m-%d")
+AllFarmsVA_weather$YYYYMMDD <- as.Date(AllFarmsVA_weather$YYYYMMDD, format = "%Y-%m-%d")
+AllFarmsKY_weather$YYYYMMDD <- as.Date(AllFarmsKY_weather$YYYYMMDD, format = "%Y-%m-%d")
+AllFarmsVT_weather$YYYYMMDD <- as.Date(AllFarmsVT_weather$YYYYMMDD, format = "%Y-%m-%d")
+SWD_data$YYYYMMDD <-as.Date(SWD_data$YYYYMMDD, format = "%Y-%m-%d")
+```
+
+**(6)** Combine weather data with abundance data in one dataframe.
+
+```{r}
+AbundanceTempVT<-right_join(SWD_data, AllFarmsVT_weather, by = c("Coordinates","YYYYMMDD"))
+AbundanceTempKY<-right_join(SWD_data, AllFarmsKY_weather, by = c("YYYYMMDD","Coordinates"))
+AbundanceTempVA<-right_join(SWD_data, AllFarmsVA_weather, by = c("Coordinates","YYYYMMDD"))
+AbundanceTempTotal<-right_join(SWD_data, AllFarmsTotal_weather, by = c("Coordinates","YYYYMMDD"))
+```
+
+**(7)** Complete cleaning up datasets so that they are streamlined and functional for figure generation.
+
+```{r}
+#Ensure that variables are factor columns, rather than numeric.
+AbundanceTempVT$T2M <- as.numeric(as.character(AbundanceTempVT$T2M))
+AbundanceTempVT$N_swd<-as.numeric(as.character(AbundanceTempVT$N_swd))
+AbundanceTempKY$T2M <- as.numeric(as.character(AbundanceTempKY$T2M))
+AbundanceTempKY$N_swd<-as.numeric(as.character(AbundanceTempKY$N_swd))
+AbundanceTempVA$T2M <- as.numeric(as.character(AbundanceTempVA$T2M))
+AbundanceTempVA$N_swd<-as.numeric(as.character(AbundanceTempVA$N_swd))
+AbundanceTempTotal$T2M <- as.numeric(as.character(AbundanceTempTotal$T2M))
+AbundanceTempTotal$N_swd<-as.numeric(as.character(AbundanceTempTotal$N_swd))
+```
+
+**(8)** Create subsets of SWD data from the SWD count sheet for each state using the coordinates for individual farms.
+
+```{r}
+#Create a subset of the SWD data for just VT
+SWD_dataVT<-SWD_data %>% 
+    dplyr::filter(Coordinates %in% c("44.5147926,-72.926916", "44.265172,-73.1334011", "44.2661258,-73.1014259", "44.2893745,-73.2420434", "44.29804,-73.1885194"))
+#Create a subset of the SWD data for just VA
+SWD_dataKY<-SWD_data %>% 
+    dplyr::filter(Coordinates %in% c("37.9736587,-84.5348738","37.590313,-84.3019525"))
+#Create a subset of the SWD data for just KY
+SWD_dataVA<-SWD_data %>% 
+    dplyr::filter(Coordinates %in% c("37.9740223,-78.5447915","38.0672129,-78.7471497","38.0624585,-78.4638626","36.6500994,-80.6151617","39.1003535,-77.8162521","38.3597327,-78.842056","38.146223,-79.081904","37.8929361,-79.0178402","38.0783378,-78.488982","37.97985,-78.48961","37.9778276,-78.3417122","38.021608,-78.631458","38.3563214,-78.9565994","38.0980496,-78.4915567","39.0444765,-77.49892","38.3967029,-78.8319075","38.0653651,-78.5021388","38.036324,-78.465637","38.291869,-78.42491","37.5825066,-77.45722","38.06808,-78.473266","36.608054,-79.5244928","38.0783378,-78.488982"))
+```
+
+**(8)** Create scatter plots to map weather variables against SWD abundance.
+
+-   First, map precipitation (PRECTOTCORR) against SWD population for all 3 states, and for the total dataset.
+
+```{r}
+par(mfrow = c(2, 2)) #arrange plots in a 2x2 grid formation for all future graphs. 
+#create a scatter plot of PRECTOTCORR against SWD for VT
+T2Mvt_plot <- attach(AbundanceTempVT)
+plot(PRECTOTCORR,N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Average total precipitation at surface of Earth",
+     xlim= c(0,30),
+     main = " VT Precipitation vs SWD Population",
+     pch = 21,
+     bg = "darkgreen",
+     col = "darkgreen",
+    abline(lm(N_swd ~ PRECTOTCORR))
+)
+#create a scatter plot of PRECTOTCORR against SWD for KY
+T2Mky_plot <- attach(AbundanceTempKY)
+plot(PRECTOTCORR,N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Average total precipitation at surface of Earth",
+     xlim= c(0,30),
+     main = "KY Precipitation vs SWD Population",
+     pch = 21,
+     bg = "darkred",
+     col = "darkred",
+     abline(lm(N_swd ~ PRECTOTCORR))
+)
+#create a scatter plot of PRECTOTCORR against SWD for KY
+T2Mva_plot <-attach(AbundanceTempVA)
+plot(PRECTOTCORR,N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Average total precipitation at surface of Earth",
+     main = "VA Precipitation vs SWD Population",
+    xlim= c(0,30),
+     pch = 21,
+     bg = "orange",
+     col = "orange",
+     abline(lm(N_swd ~ PRECTOTCORR))
+)
+#create a scatter plot of PRECTOTCORR against SWD for All Farms 
+T2Mtotal_plot <-attach(AbundanceTempTotal)
+plot(PRECTOTCORR, N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Average total precipitation at surface of Earth",
+     xlim= c(0,30),
+     main = "Total Precipitation vs SWD Population",
+     pch = 21,
+     bg = "salmon",
+     col = "salmon",
+     abline(lm(N_swd ~ PRECTOTCORR))
+)
+```
+
+*Analysis: There is a visible trend between precipitation and SWD population, with higher SWD counts clustering closer to zero precipitation.*
+
+-   Then calculate the summary statistics for the two variables. The summary statistics are primarily used for the adjusted R-squared value, which represents how well the regression line matches the empirical data, and the p value, which represents the significance of the relationship.
+
+```{r}
+VTstatsPRECTOTCORR<- lm(N_swd ~ PRECTOTCORR, data = AbundanceTempVT) 
+summary(VTstatsPRECTOTCORR)
+KYstatsPRECTOTCORR<- lm(N_swd ~ PRECTOTCORR, data = AbundanceTempKY) 
+summary(KYstatsPRECTOTCORR)
+VAstatsPRECTOTCORR<-lm(N_swd ~ PRECTOTCORR, data = AbundanceTempVA) 
+summary(VAstatsPRECTOTCORR)
+TotalstatsPRECTOTCORR<-lm(N_swd ~ PRECTOTCORR, data = AbundanceTempTotal) 
+summary(TotalstatsPRECTOTCORR)
+```
+
+*Analysis: The R-squared values were close to zero for all of the sampling groups, indicating a low linear fit. The p-values were insignificant for all groups except Kentucky.*
+
+**(9)**
+
+-   Next, map relative humidity (RH2M) against SWD population for all 3 states, and for the total dataset. Then calculate the summary statistics for the two variables.
+
+```{r}
+#create a scatter plot of RH2M against SWD
+attach(AbundanceTempVT)
+plot(RH2M,N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Relative Humidity",
+     xlim= c(55,95),
+     main = "VT Relative Humidity vs SWD Population",
+     pch = 21,
+     bg = "darkgreen",
+     col = "darkgreen",
+     abline(lm(N_swd ~ RH2M))
+)
+#create a scatter plot of RH2M against SWD
+attach(AbundanceTempKY)
+plot(RH2M,N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Relative Humidity",
+     xlim= c(55,100),
+     main = "KY Relative Humidity vs SWD Population",
+     pch = 21,
+     bg = "darkred",
+     col = "darkred",
+     abline(lm(N_swd ~ RH2M))
+)
+#create a scatter plot of RH2M against SWD
+attach(AbundanceTempVA)
+plot(RH2M,N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Relative Humidity",
+     xlim= c(55,95),
+     main = "VA Relative Humidity vs SWD Population",
+     pch = 21,
+     bg = "orange",
+     col = "orange",
+     abline(lm(N_swd ~ RH2M))
+)
+#create a scatter plot of RH2M against SWD
+attach(AbundanceTempTotal)
+plot(RH2M, N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Relative Humidity",
+     xlim= c(55,95),
+     main = "Total Relative Humidity vs SWD Population",
+     pch = 21,
+     bg = "salmon",
+     col = "salmon",
+     abline(lm(N_swd ~ RH2M))
+)
+```
+
+*Analysis: There is little visible trend in any of the sampling groups between relative humdity and SWD abundance.*
+
+-   Then calculate the summary statistics for the two variables.
+
+```{r}
+VTstatsRH2M<- lm(N_swd ~ RH2M, data = AbundanceTempVT) 
+summary(VTstatsRH2M)
+KYstatsRH2M<- lm(N_swd ~ RH2M, data = AbundanceTempKY) 
+summary(KYstatsRH2M)
+VAstatsRH2M<-lm(N_swd ~ RH2M, data = AbundanceTempVA) 
+summary(VAstatsRH2M)
+TotalstatsRH2M<-lm(N_swd ~ RH2M, data = AbundanceTempTotal) 
+summary(TotalstatsRH2M)
+```
+
+*Analysis: The R-squared values were close to zero for all of the sampling groups, indicating a low linear fit. The p-values were insignificant as well. This indicates a lack of relationship between humidity and SWD abundance.*
+
+**(10)**
+
+-   Finally, map temperature (T2M) against SWD population for all 3 states, and for the total dataset. Then calculate the summary statistics for the two variables.
+
+```{r}
+#create a scatter plot of T2M against SWD
+attach(AbundanceTempVT)
+plot(T2M,N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Tempature (degrees C)",
+     xlim= c(0,30),
+     main = "VT Temperature vs SWD Population",
+     pch = 21,
+     bg = "darkgreen",
+     col = "darkgreen",
+     abline(lm(N_swd ~ T2M))
+)
+#create a scatter plot of T2M against SWD
+attach(AbundanceTempKY)
+plot(T2M,N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Tempature (degrees C)",
+     xlim= c(0,30),
+     main = "KY Temperature vs SWD Population",
+     pch = 21,
+     bg = "darkred",
+     col = "darkred",
+     abline(lm(N_swd ~ T2M))
+)
+#create a scatter plot of T2M against SWD
+attach(AbundanceTempVA)
+plot(T2M, N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Tempature (degrees C)",
+     main = "VA Temperature vs SWD Population",
+     pch = 21,
+     bg = "orange",
+     col = "orange",
+     abline(lm(N_swd ~ T2M))
+)
+#create a scatter plot of T2M against SWD
+attach(AbundanceTempTotal)
+plot(T2M, N_swd,
+     ylab = "Number of SWD Males",
+     xlab = "Tempature (degrees C)",
+    xlim= c(0,30),
+     main = "Total Temperature vs SWD Population",
+     pch = 21,
+     bg = "salmon",
+     col = "salmon",
+     abline(lm(N_swd ~ T2M))
+)
+```
+
+*Analysis: We can see SWD abundances peaking at different times for each state. SWD populations peak around 20 degrees C in VT, 7 degrees C in KY, and 25 degrees C in VA.*
+
+-   Then calculate the summary statistics for the two variables.
+
+```{r}
+VTstatsT2M<- lm(N_swd ~ T2M, data = AbundanceTempVT) 
+summary(VTstatsT2M)
+KYstatsT2M<- lm(N_swd ~ T2M, data = AbundanceTempKY) 
+summary(KYstatsT2M)
+VAstatsT2M<-lm(N_swd ~ T2M, data = AbundanceTempVA) 
+summary(VAstatsT2M)
+TotalstatsT2M<-lm(N_swd ~ T2M, data = AbundanceTempTotal) 
+summary(TotalstatsT2M)
+```
+
+*Analysis: The R-squared values were close to zero for all of the sampling groups, indicating a low linear fit. The p-values significant for all sampling groups except for Vermont. It is notable though to consider that Vermont had the least variable temperature data over the short sampling period.*
